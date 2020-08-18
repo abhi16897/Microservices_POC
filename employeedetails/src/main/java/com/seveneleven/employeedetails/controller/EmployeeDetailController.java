@@ -71,12 +71,19 @@ public class EmployeeDetailController {
 		}
 		
 		//============================ Update By Employee ID=========================
+		
 		@Async
 		public void updateEmployee(Employee employee) {
 			restTemplate.put("http://employee-management-service/update", employee);
 		}
 		
-		
+		@HystrixCommand(fallbackMethod = "getFallbackupdateEmployee",
+				commandProperties = {
+						@HystrixProperty(name="execution.isolation.thread.timeoutInMilliseconds",value="5000"),
+						@HystrixProperty(name="circuitBreaker.requestVolumeThreshold",value="5"),
+						@HystrixProperty(name="circuitBreaker.errorThresholdPercentage",value="50"),
+						@HystrixProperty(name="circuitBreaker.sleepWindowInMilliseconds",value="6000")
+				})
 		@PutMapping("/updateemployee")
 		public ResponseTransfer employeeUpdate(@RequestBody Employee employee) {
 			try {
@@ -87,8 +94,18 @@ public class EmployeeDetailController {
 			
 			return new ResponseTransfer("Sucsessfully Updated");
 		}
+		public ResponseTransfer getFallbackupdateEmployee(@RequestBody Employee employee) {
+			return new ResponseTransfer("Service is Not Working");
+		}
 		
 		//=========================Delete By Employee ID=================
+		@HystrixCommand(fallbackMethod = "getFallbackdeleteEmployee",
+				commandProperties = {
+						@HystrixProperty(name="execution.isolation.thread.timeoutInMilliseconds",value="5000"),
+						@HystrixProperty(name="circuitBreaker.requestVolumeThreshold",value="5"),
+						@HystrixProperty(name="circuitBreaker.errorThresholdPercentage",value="50"),
+						@HystrixProperty(name="circuitBreaker.sleepWindowInMilliseconds",value="6000")
+				})
 		@DeleteMapping("deleteemployee/{employeeid}")
 		public ResponseTransfer deleteEmployee(@PathVariable String employeeid) {
 			try {
@@ -100,11 +117,25 @@ public class EmployeeDetailController {
 			return new ResponseTransfer("Sucessfully Deleted");
 		}
 		
+		public ResponseTransfer getFallbackdeleteEmployee(@PathVariable String employeeid) {
+			return new ResponseTransfer("Service is Not Working");
+		}
+		
 		//==============================Get By Employee ID ======================
+		@HystrixCommand(fallbackMethod = "getFallbyEmployee",
+				commandProperties = {
+						@HystrixProperty(name="execution.isolation.thread.timeoutInMilliseconds",value="5000"),
+						@HystrixProperty(name="circuitBreaker.requestVolumeThreshold",value="5"),
+						@HystrixProperty(name="circuitBreaker.errorThresholdPercentage",value="50"),
+						@HystrixProperty(name="circuitBreaker.sleepWindowInMilliseconds",value="6000")
+				})
 		@GetMapping("/getByid/{empid}")
 		public List<Employee> getByempId(@PathVariable int empid){
 			AllEmployees employees=restTemplate.getForObject("http://employee-management-service/allemployees", AllEmployees.class);
 			List<Employee> filteredlist=employees.getAllEmployees().stream().filter(emp->empid==emp.getEmployeeId()).collect(Collectors.toList());
 			return filteredlist;
+		}
+		public ResponseTransfer getFallbyEmployee(@PathVariable int empid) {
+			return new ResponseTransfer("Service is Not Working");
 		}
 }
